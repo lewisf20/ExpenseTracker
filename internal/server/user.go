@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/lewisf20/ExpenseTracker/internal/store"
+	"github.com/lewisf20/ExpenseTracker/services/tokenservice"
 )
 
 func register(ctx *gin.Context) {
@@ -16,9 +17,15 @@ func register(ctx *gin.Context) {
 
 	store.Users = append(store.Users, user)
 
+	token, err := tokenservice.CreateToken(123)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"err": err.Error()})
+		return
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
 		"msg":   "Registered successfully.",
-		"token": "023a246d-274d-4a84-8a9d-dd12b406d6c7",
+		"token": token.Token,
 	})
 }
 
@@ -31,9 +38,15 @@ func signIn(ctx *gin.Context) {
 
 	for _, u := range store.Users {
 		if u.Email == user.Email && u.Password == user.Password {
+			token, err := tokenservice.CreateToken(123)
+			if err != nil {
+				ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"err": err.Error()})
+				return
+			}
+
 			ctx.JSON(http.StatusOK, gin.H{
 				"msg":   "Signed in successfully.",
-				"token": "023a246d-274d-4a84-8a9d-dd12b406d6c7",
+				"token": token.Token,
 			})
 			return
 		}
